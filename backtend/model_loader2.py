@@ -1,6 +1,6 @@
-# model_loader2.py
 from __future__ import annotations
-import os, asyncio, json
+import os
+import asyncio
 from typing import Dict, Any, Optional
 
 # ── ensure OpenAI SDK is installed ────────────────────────────────────────
@@ -9,7 +9,7 @@ try:
 except ImportError as e: 
     raise SystemExit(
         "❌  The 'openai' package is required.  Install / upgrade with:\n"
-        "    pip install --upgrade openai"
+        "   pip install --upgrade openai"
     ) from e
 
 # ── OpenRouter configuration ───────────────────────────────────────────────
@@ -32,8 +32,11 @@ Be decisive and confident. Do not include generic disclaimers or defer to other 
 never answer or respond to non medical qustions at all .
 """.strip()
 
-# ── Default API key (env‐var or fallback) ───────────────────────────────────
-DEFAULT_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+# ── Load Default API key securely from environment ───────────────────────────
+# The .env file is loaded by chat_server.py, making the variable available here.
+DEFAULT_API_KEY = os.getenv("OPENROUTER_API_KEY")
+if not DEFAULT_API_KEY:
+    raise ValueError("❌ OPENROUTER_API_KEY not found in environment variables. Please add it to your .env file.")
 
 # ── Global client using the default key ────────────────────────────────────
 _global_client = AsyncOpenAI(api_key=DEFAULT_API_KEY, base_url=BASE_URL)
@@ -47,9 +50,7 @@ async def generate(
     extra: Dict[str, Any] | None = None,
     api_key: Optional[str] = None,
 ) -> str:
-    """Return the assistant’s response text, with a system role for prescribing.
-    If api_key is provided, use it for this single call instead of the default."""
-    # pick client
+    """Return the assistant’s response text, with a system role for prescribing."""
     client = _global_client
     if api_key:
         client = AsyncOpenAI(api_key=api_key, base_url=BASE_URL)
@@ -69,7 +70,7 @@ async def generate(
 
     resp = await client.chat.completions.create(**params)
     msg = resp.choices[0].message
-    return (msg.content or msg.reasoning or "").strip()
+    return (msg.content or "").strip()
 
 if __name__ == "__main__":
     async def _demo() -> None:
@@ -86,7 +87,7 @@ if __name__ == "__main__":
             max_tokens=128,
         )
         msg = completion.choices[0].message
-        answer = (msg.content or msg.reasoning or "").strip()
+        answer = (msg.content or "").strip()
         print("Assistant says:\n", answer)
 
     asyncio.run(_demo())
