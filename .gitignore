@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Environment variables file (contains secret keys)
+.env
+
+# Firebase credentials file
+*.json
+
+# Session memory files 
+session_memory/
